@@ -1,0 +1,62 @@
+#pragma once
+
+#include "parser.h"
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <time.h>
+
+typedef struct {
+  bool enabled;
+} Debugger;
+
+#define FREE(p)                                                                                                        \
+  do {                                                                                                                 \
+    free(p);                                                                                                           \
+    (p) = nullptr;                                                                                                     \
+  } while (0)
+
+#ifdef _WIN32
+// Windows: Use ctime_s
+static inline void print_debug(Debugger *dbg, const char *format, ...) {
+  if (dbg->enabled) {
+    time_t now = time(nullptr);
+    char time_str[26];
+    ctime_s(time_str, sizeof(time_str), &now);
+    time_str[24] = '\0'; // remove newline
+    printf("[DEBUG] - %s - ", time_str);
+    va_list args;
+    va_start(args, format);
+    vprintf_s(format, args);
+    va_end(args);
+  }
+}
+#else
+// POSIX: Use ctime_r (or ctime as fallback)
+static inline void print_debug(Debugger *dbg, const char *format, ...) {
+  if (dbg->enabled) {
+    time_t now = time(nullptr);
+    char time_str[26];
+    char *result = sizeof(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L ? ctime_r(&now, time_str) : ctime(&now);
+    if (result == nullptr)
+      result = "unknown time";
+    result[24] = '\0';
+    printf("[DEBUG - %s] ", time_str);
+    va_list args;
+    va_start(args, format);
+    vprintf_s(format, args);
+    va_end(args);
+  }
+}
+#endif
+
+bool is_valid_symbol(char *symbol);
+bool is_string_numeric(char *string);
+void init_debugger(Debugger *debugger, bool enabled);
+void check_io_error(FILE *file, const char *filename);
+bool line_is_spaces_only_or_empty(const char *string);
+void remove_comment_inplace(char *buffer);
+void print_syntax_error(const char *message, const char *line, InstructionType type, int line_number, int column);
+
+extern Debugger debugger;
+extern Debugger *dbg;
