@@ -51,7 +51,7 @@ static inline void print_debug(Debugger *dbg, const char *format, ...) {
 #endif
 
 bool is_constant(const char *c);
-char *is_not_valid_symbol(char *symbol);
+char *is_not_valid_symbol(char *symbol, InstructionType type);
 bool is_valid_const_size(const char *string);
 void init_debugger(Debugger *debugger, bool enabled);
 void check_io_error(FILE *file, const char *filename);

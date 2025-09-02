@@ -82,15 +82,13 @@ bool is_constant(const char *c) {
 }
 
 // returns nullptr if valid or the invalid symbol's pointer otherwise
-char *is_not_valid_symbol(char *symbol) {
+char *is_not_valid_symbol(char *symbol, InstructionType type) {
   bool is_constant_var = is_constant(symbol);
   if (!is_constant_var && isdigit((unsigned char)*symbol)) {
     return symbol; // cant start with a digit
   }
-  if (is_constant_var) {
-    if (!is_valid_const_size(symbol)) {
-      return symbol;
-    }
+  if (is_constant_var && (type == L_INSTRUCTION || !is_valid_const_size(symbol))) {
+    return symbol;
   }
   print_debug(dbg, "checking string \'%s\'.. \n", symbol);
   while (*symbol) {
@@ -113,7 +111,7 @@ bool is_valid_const_size(const char *string) {
       return false;
     }
   } else {
-    printf("Conversion to int failed\n");
+    printf("conversion to int failed\n");
     exit(1);
   }
   return true;
