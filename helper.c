@@ -1,6 +1,7 @@
 #include "helper.h"
 #include "parser.h"
 #include <ctype.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,8 +42,9 @@ void remove_comment_inplace(char *buffer) {
   }
 }
 
-void print_syntax_error(const char *message, const char *line, InstructionType instruction_type, int line_number,
-                        int column) {
+void print_syntax_error(const char *line, InstructionType instruction_type, int line_number, int position,
+                        const char *format, ...) {
+  va_list args;
   char type[15];
   switch (instruction_type) {
   case A_INSTRUCTION:
@@ -58,11 +60,22 @@ void print_syntax_error(const char *message, const char *line, InstructionType i
     strcpy(type, "No-instruction");
   }
 
-  for (int i = 0; i < column; i++) {
-    fprintf(stderr, " ");
+  fprintf(stderr, "%*s^\n", position, "");
+  char new_msg_buf[S128];
+  va_start(args, format);
+  vsnprintf(new_msg_buf, sizeof new_msg_buf, format, args);
+  va_end(args);
+
+  fprintf(stderr, "[ERROR] Syntax error on line %d, column %d : %s in %s \"%s\"\n", line_number, 1 + position,
+          new_msg_buf, type, line);
+}
+
+bool is_constant(const char *c) {
+  while (*c) {
+    if (!isdigit((unsigned char)*c++))
+      return false;
   }
-  fprintf(stderr, "^\n");
-  fprintf(stderr, "[ERROR] Syntax error on line %d: %s in %s \"%s\"\n", line_number, message, type, line);
+  return true;
 }
 
 // TODO: implement these:
