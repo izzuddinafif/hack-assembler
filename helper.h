@@ -56,7 +56,7 @@ void init_debugger(Debugger *debugger, bool enabled);
 void check_io_error(FILE *file, const char *filename);
 bool line_is_spaces_only_or_empty(const char *string);
 void remove_comment_inplace(char *buffer);
-void print_syntax_error(const char *message, const char *line, InstructionType type, int line_number, int column);
-
+void print_syntax_error(const char *line, InstructionType instruction_type, int line_number, int position,
+                        const char *format, ...) __attribute__((format(printf, 5, 6)));
 extern Debugger debugger;
 extern Debugger *dbg;
