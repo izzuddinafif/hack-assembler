@@ -50,8 +50,9 @@ static inline void print_debug(Debugger *dbg, const char *format, ...) {
 }
 #endif
 
-bool is_valid_symbol(char *symbol);
-bool is_string_numeric(char *string);
+bool is_constant(const char *c);
+char *is_not_valid_symbol(char *symbol);
+bool is_valid_const_size(const char *string);
 void init_debugger(Debugger *debugger, bool enabled);
 void check_io_error(FILE *file, const char *filename);
 bool line_is_spaces_only_or_empty(const char *string);

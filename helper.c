@@ -1,5 +1,6 @@
 #include "helper.h"
 #include "parser.h"
+#include "strlib.h"
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -8,6 +9,8 @@
 
 Debugger debugger;
 Debugger *dbg = &debugger;
+
+const int MAX_CONSTANT_SIZE = 32767;
 
 void init_debugger(Debugger *d, bool enabled) { d->enabled = enabled; }
 
@@ -78,7 +81,40 @@ bool is_constant(const char *c) {
   return true;
 }
 
-// TODO: implement these:
-bool is_valid_symbol(char *symbol) {}
+// returns nullptr if valid or the invalid symbol's pointer otherwise
+char *is_not_valid_symbol(char *symbol) {
+  bool is_constant_var = is_constant(symbol);
+  if (!is_constant_var && isdigit((unsigned char)*symbol)) {
+    return symbol; // cant start with a digit
+  }
+  if (is_constant_var) {
+    if (!is_valid_const_size(symbol)) {
+      return symbol;
+    }
+  }
+  print_debug(dbg, "checking string \'%s\'.. \n", symbol);
+  while (*symbol) {
+    int sym = (unsigned char)*symbol;
+    print_debug(dbg, "checking char \'%c\'.. \n", *symbol);
+    if (!(isalnum(sym) || sym == '_' || sym == '.' || sym == '$' || sym == ':')) {
+      // print_debug(dbg, "%c is NOT a valid symbol\n", sym);
+      return symbol;
+    }
+    symbol++;
+  }
+  return nullptr;
+}
 
-bool is_string_numeric(char *string) {}
+bool is_valid_const_size(const char *string) {
+  int result = 0;
+  if (str_to_int(string, &result)) {
+    // print_debug(dbg, "converted %d\n", result);
+    if (result > MAX_CONSTANT_SIZE) {
+      return false;
+    }
+  } else {
+    printf("Conversion to int failed\n");
+    exit(1);
+  }
+  return true;
+}
