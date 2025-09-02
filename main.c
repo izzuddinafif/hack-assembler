@@ -3,13 +3,17 @@
 #include "strlib.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int g_status = EXIT_FAILURE;
 
 int main(int argc, char **argv) {
   // initialize debugger
-  init_debugger(dbg, true);
-  print_debug(dbg, "Heya!\n");
+  bool en = false;
+  if (strcmp(getenv("DBG"), "y") == 0)
+    en = true;
+  init_debugger(dbg, en);
+  print_debug(dbg, "Heya, debug mode is on!\n");
 
   printf("Welcome to Afif's Hack Assembler!\n\n");
   if (argc < 2 || !str_ends_with(argv[1], ".asm")) {
