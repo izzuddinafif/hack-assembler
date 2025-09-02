@@ -71,7 +71,8 @@ InstructionType instruction_type(Parser *parser) {
     return C_INTRUCTION;
 }
 
-void _parser_print_error(int ln, const char *invalid_symbol_ptr, InstructionType type, const char *instruction, const char *symbol) {
+void _parser_print_error(int ln, const char *invalid_symbol_ptr, InstructionType type, const char *instruction,
+                         const char *symbol) {
   int invalid_symbol_pos = 1 + (int)(strchr(symbol, *invalid_symbol_ptr) - symbol);
   if (isdigit((unsigned char)*invalid_symbol_ptr) && invalid_symbol_pos == 1) {
     print_syntax_error(instruction, type, ln, invalid_symbol_pos, "symbol can't start with digit \'%c\'",
@@ -93,15 +94,20 @@ void get_symbol(Parser *parser) {
       print_syntax_error(instruction, type, ln, (int)strlen(instruction), "missing symbol after @");
       exit(1);
     }
-    
+
     // skip the @, copy the rest
-    char *a_symbol = instruction + 1;
-    char *invalid_symbol_ptr = is_not_valid_symbol(a_symbol);
+
+    int len = (int)strlen(instruction);
+    char a_symbol[len]; // - 1 from actual instruction
+    snprintf(a_symbol, sizeof a_symbol, "%s", instruction + 1);
+
+    char *invalid_symbol_ptr = is_not_valid_symbol(a_symbol, type);
     if (!invalid_symbol_ptr) {
       snprintf(parser->symbol, sizeof parser->symbol, "%s", a_symbol);
       return;
     }
     _parser_print_error(ln, invalid_symbol_ptr, type, instruction, a_symbol);
+    exit(1);
 
   } else if (type == L_INSTRUCTION) {
     char *closing_paren = strchr(instruction, ')');
@@ -111,10 +117,10 @@ void get_symbol(Parser *parser) {
     }
 
     // remove parentheses
-    char *l_symbol = instruction + 1;
-    l_symbol[strlen(l_symbol) - 1] = '\0';
-
-    char *invalid_symbol_ptr = is_not_valid_symbol(l_symbol);
+    int len = (int)strlen(instruction);
+    char l_symbol[len - 1]; // -2 from actual instruction
+    snprintf(l_symbol, sizeof l_symbol, "%.*s", len - 2, instruction + 1);
+    char *invalid_symbol_ptr = is_not_valid_symbol(l_symbol, type);
     if (!invalid_symbol_ptr) {
       snprintf(parser->symbol, sizeof parser->symbol, "%s", l_symbol);
       return;
@@ -123,7 +129,6 @@ void get_symbol(Parser *parser) {
     exit(1);
   }
 }
-
 
 // TODO: implement these:
 void get_dest(Parser *parser) {}
