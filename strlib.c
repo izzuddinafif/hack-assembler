@@ -1,7 +1,10 @@
 #include "strlib.h"
 #include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 bool str_starts_with(const char *str, const char *prefix) { return strncmp(str, prefix, strlen(prefix)) == 0; }
@@ -58,6 +61,31 @@ void str_trim_whitespace_inplace(char *str) {
   }
   str_trim_leading_whitespace_inplace(str);
   str_trim_trailing_whitespace_inplace(str);
+}
+
+int str_to_int(const char *str, int *out) {
+  char *end_ptr;
+  // errno can be set to any non-zero value by a library function call
+  // regardless of whether there was an error, so it needs to be cleared
+  // in order to check the error set by strtol
+  errno = 0; // reset errno
+
+  // base 10
+  long value = strtol(str, &end_ptr, 10);
+  if (str == end_ptr) {
+    return 0; // no digits found, end_ptr stil points to str (first char)
+  }
+
+  if (errno == ERANGE) {
+    return 0; // out of range error / overflow
+  }
+
+  if (*end_ptr != '\0') {
+    return 0; // non-number after number e.g. 123abc (optional tho)
+  }
+
+  *out = (int)value;
+  return 1;  // success
 }
 
 // char s[12] = "  hey yo  ";
