@@ -10,7 +10,8 @@ int g_status = EXIT_FAILURE;
 int main(int argc, char **argv) {
   // initialize debugger
   bool en = false;
-  if (strcmp(getenv("DBG"), "y") == 0)
+  char *env = getenv("DBG");
+  if (env && strcmp(env, "y") == 0)
     en = true;
   init_debugger(dbg, en);
   print_debug(dbg, "Heya, debug mode is on!\n");
