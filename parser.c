@@ -42,6 +42,7 @@ void parser_init(Parser *parser, const char *Filename) {
   parser->type = NO_INSTRUCTION;
   parser->hasMoreLines = true; // assume there are lines initially
   parser->lineNumber = 0;
+  parser->errorStatus = false;
 
   parser->currentInstruction[0] = '\0'; // set all string buffers to empty
   parser->symbol[0] = '\0';
@@ -67,6 +68,7 @@ void advance(Parser *parser) {
   char line_buf[S512];
   while (fgets(line_buf, sizeof line_buf, parser->inputFile)) {
     parser->lineNumber++;
+
     remove_comment_inplace(line_buf);
     str_trim_whitespace_inplace(line_buf);
 
@@ -75,9 +77,7 @@ void advance(Parser *parser) {
     }
 
     puts(line_buf);
-    strncpy(parser->currentInstruction, line_buf, (sizeof parser->currentInstruction) - 1);
-    // null terminate in case of input size >= buffer size
-    parser->currentInstruction[(sizeof parser->currentInstruction) - 1] = '\0';
+    snprintf(parser->currentInstruction, sizeof parser->currentInstruction, "%s", line_buf);
     return;
   }
   parser->hasMoreLines = false;
@@ -115,46 +115,46 @@ void get_symbol(Parser *parser) {
   if (type == A_INSTRUCTION) {
     if (strlen(instruction) < 2) {
       print_syntax_error(instruction, type, ln, (int)strlen(instruction), "missing symbol after @");
-      exit(1);
+      parser->errorStatus = true;
     }
 
     // skip the @, copy the rest
-
     int len = (int)strlen(instruction);
     char a_symbol[len]; // - 1 from actual instruction
     snprintf(a_symbol, sizeof a_symbol, "%s", instruction + 1);
 
-    char *invalid_symbol_ptr = is_not_valid_symbol(a_symbol, type);
+    const char *invalid_symbol_ptr = is_not_valid_symbol(a_symbol, type);
     if (!invalid_symbol_ptr) {
       snprintf(parser->symbol, sizeof parser->symbol, "%s", a_symbol);
       return;
     }
     _parser_print_error(ln, invalid_symbol_ptr, type, instruction, a_symbol);
-    exit(1);
+    parser->errorStatus = true;
 
   } else if (type == L_INSTRUCTION) {
     char *closing_paren = strchr(instruction, ')');
     if (!closing_paren) {
       print_syntax_error(instruction, type, ln, (int)strlen(instruction), "missing ')'");
-      exit(1);
+      parser->errorStatus = true;
     }
 
     // remove parentheses
     int len = (int)strlen(instruction);
     char l_symbol[len - 1]; // -2 from actual instruction
     snprintf(l_symbol, sizeof l_symbol, "%.*s", len - 2, instruction + 1);
-    char *invalid_symbol_ptr = is_not_valid_symbol(l_symbol, type);
+    const char *invalid_symbol_ptr = is_not_valid_symbol(l_symbol, type);
     if (!invalid_symbol_ptr) {
       snprintf(parser->symbol, sizeof parser->symbol, "%s", l_symbol);
       return;
     }
     _parser_print_error(ln, invalid_symbol_ptr, type, instruction, l_symbol);
-    exit(1);
+    parser->errorStatus = true;
   }
 }
 
 // TODO: implement these:
-void get_dest(Parser *parser) {}
+void get_dest(Parser *parser) {
+}
 
 void get_comp(Parser *parser) {}
 

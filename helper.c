@@ -6,6 +6,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+// Text colors
+#define BLACK "\033[30m"
+#define RED "\033[31m"
+#define GREEN "\033[32m"
+#define YELLOW "\033[33m"
+#define BLUE "\033[34m"
+#define MAGENTA "\033[35m"
+#define CYAN "\033[36m"
+#define WHITE "\033[37m"
+
+// Bright colors
+#define BRIGHT_RED "\033[91m"
+#define BRIGHT_GREEN "\033[92m"
+#define BRIGHT_YELLOW "\033[93m"
+
+// Background colors
+#define BG_RED "\033[41m"
+#define BG_GREEN "\033[42m"
+
+// Styles
+#define BOLD "\033[1m"
+#define UNDERLINE "\033[4m"
+#define RESET "\033[0m"
+
+const char *get_color_for_fd(int fd, const char *code) { return isatty(fd) ? code : ""; }
 
 Debugger debugger;
 Debugger *dbg = &debugger;
@@ -62,14 +89,16 @@ void print_syntax_error(const char *line, InstructionType instruction_type, int 
   default:
     strcpy(type, "No-instruction");
   }
-
+  fputs(get_color_for_fd(fileno(stderr), RED), stderr);
   fprintf(stderr, "%*s^\n", position, "");
+  fputs(get_color_for_fd(fileno(stderr), RESET), stderr);
   char new_msg_buf[S128];
   va_start(args, format);
   vsnprintf(new_msg_buf, sizeof new_msg_buf, format, args);
   va_end(args);
 
-  fprintf(stderr, "[ERROR] Syntax error on line %d, column %d : %s in %s \"%s\"\n", line_number, 1 + position,
+  fprintf(stderr, "%s[ERROR]%s Syntax error on line %d, column %d : %s in %s \"%s\"\n",
+          get_color_for_fd(fileno(stderr), RED), get_color_for_fd(fileno(stderr), RESET), line_number, 1 + position,
           new_msg_buf, type, line);
 }
 
@@ -82,7 +111,7 @@ bool is_constant(const char *c) {
 }
 
 // returns nullptr if valid or the invalid symbol's pointer otherwise
-char *is_not_valid_symbol(char *symbol, InstructionType type) {
+const char *is_not_valid_symbol(char *symbol, InstructionType type) {
   bool is_constant_var = is_constant(symbol);
   if (!is_constant_var && isdigit((unsigned char)*symbol)) {
     return symbol; // cant start with a digit
@@ -116,3 +145,5 @@ bool is_valid_const_size(const char *string) {
   }
   return true;
 }
+
+const char *is_valid_c_instruction(const char *instruction) {}

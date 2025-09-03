@@ -10,6 +10,7 @@ typedef struct {
   char currentInstruction[S256];
   bool hasMoreLines;
   int lineNumber;
+  bool errorStatus;
 
   // to be filled
   InstructionType type;
@@ -25,6 +26,7 @@ typedef struct {
 } MnemonicMap;
 
 const char *lookup_mnemonic(MnemonicMap table[], const char *mnemonic_to_find);
+
 void parser_init(Parser *parser, const char *filename);
 void parser_destroy(Parser *parser);
 
