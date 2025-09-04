@@ -27,18 +27,20 @@ int main(int argc, char **argv) {
   Parser *parser = &p;
   parser_init(parser, file_name);
 
-  while (has_more_lines(parser)) {
-    advance(parser);
-
+  while (advance(parser)) {
+    if (!has_more_lines(parser))
+      break;
     parser->type = instruction_type(parser);
 
     if (parser->type == A_INSTRUCTION || parser->type == L_INSTRUCTION) {
       get_symbol(parser);
     } else {
-      get_dest(parser);
-      get_comp(parser);
-      get_jump(parser);
+      parse_c_instruction(parser);
     }
+    parser->errorStatus ? (void)0
+                        : print_debug(dbg, "parsed instruction: %s on line %d with no error\n",
+                                      parser->currentInstruction, parser->lineNumber);
+    parser->errorStatus = false;
   }
 
   parser_destroy(parser);

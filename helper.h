@@ -53,6 +53,7 @@ static inline void print_debug(Debugger *dbg, const char *format, ...) {
 bool is_constant(const char *c);
 const char *is_not_valid_symbol(char *symbol, InstructionType type);
 bool is_valid_const_size(const char *string);
+const char * is_not_valid_c_instruction(const char * instruction);
 void init_debugger(Debugger *debugger, bool enabled);
 void check_io_error(FILE *file, const char *filename);
 bool line_is_spaces_only_or_empty(const char *string);

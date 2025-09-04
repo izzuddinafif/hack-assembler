@@ -119,10 +119,10 @@ const char *is_not_valid_symbol(char *symbol, InstructionType type) {
   if (is_constant_var && (type == L_INSTRUCTION || !is_valid_const_size(symbol))) {
     return symbol;
   }
-  print_debug(dbg, "checking string \'%s\'.. \n", symbol);
+  // print_debug(dbg, "checking string \'%s\'.. \n", symbol);
   while (*symbol) {
     int sym = (unsigned char)*symbol;
-    print_debug(dbg, "checking char \'%c\'.. \n", *symbol);
+    // print_debug(dbg, "checking char \'%c\'.. \n", *symbol);
     if (!(isalnum(sym) || sym == '_' || sym == '.' || sym == '$' || sym == ':')) {
       // print_debug(dbg, "%c is NOT a valid symbol\n", sym);
       return symbol;
@@ -146,4 +146,29 @@ bool is_valid_const_size(const char *string) {
   return true;
 }
 
-const char *is_valid_c_instruction(const char *instruction) {}
+const char *is_not_valid_c_instruction(const char *instruction) {
+  const char *equal_sign = strchr(instruction, '=');
+  const char *semicolon = strchr(instruction, ';');
+  const char *start = instruction;
+  // print_debug(dbg, "checking C instruction \"%s\"\n", instruction);
+  while (*instruction) {
+    // print_debug(dbg, "checking char \'%c\'\n", *instruction);
+    if (!(isalpha((unsigned char)(*instruction)) || *instruction == '1' || *instruction == '0' || *instruction == ';' ||
+          *instruction == '=' || *instruction == '-' || *instruction == '+' || *instruction == '!' ||
+          *instruction == '&' || *instruction == '|')) {
+      return instruction;
+    }
+    instruction++;
+  }
+  if (equal_sign) {
+    if (equal_sign - start == 0 || strlen(equal_sign) == 1) {
+      return equal_sign;
+    }
+  }
+  if (semicolon) {
+    if (strlen(semicolon) == 1 || semicolon - start == 0) {
+      return semicolon;
+    }
+  }
+  return nullptr;
+}
