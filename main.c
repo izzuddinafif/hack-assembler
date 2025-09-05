@@ -1,3 +1,4 @@
+#include "code.h"
 #include "helper.h"
 #include "parser.h"
 #include "strlib.h"
@@ -26,23 +27,30 @@ int main(int argc, char **argv) {
   Parser p;
   Parser *parser = &p;
   parser_init(parser, file_name);
-
+  bool has_errors = false;
   while (advance(parser)) {
     if (!has_more_lines(parser))
       break;
-    parser->type = instruction_type(parser);
+    instruction_type(parser);
 
     if (parser->type == A_INSTRUCTION || parser->type == L_INSTRUCTION) {
       get_symbol(parser);
     } else {
       parse_c_instruction(parser);
     }
-    parser->errorStatus ? (void)0
-                        : print_debug(dbg, "parsed instruction: %s on line %d with no error\n",
-                                      parser->currentInstruction, parser->lineNumber);
-    parser->errorStatus = false;
+    if (parser->errorStatus) {
+      has_errors = true;
+      parser_reset_fields(parser);
+      continue;
+    }
+
+    print_debug(dbg, "successfully parsed %s on line %d\n", parser->currentInstruction, parser->lineNumber);
   }
 
+  if (has_errors) {
+    g_status = EXIT_FAILURE;
+    return g_status;
+  }
   parser_destroy(parser);
   g_status = EXIT_SUCCESS;
   return g_status;

@@ -72,23 +72,8 @@ void remove_comment_inplace(char *buffer) {
   }
 }
 
-void print_syntax_error(const char *line, InstructionType instruction_type, int line_number, int position,
-                        const char *format, ...) {
+void print_syntax_error(const char *line, const char *type, int line_number, int position, const char *format, ...) {
   va_list args;
-  char type[15];
-  switch (instruction_type) {
-  case A_INSTRUCTION:
-    strcpy(type, "A-instruction");
-    break;
-  case C_INTRUCTION:
-    strcpy(type, "C-instruction");
-    break;
-  case L_INSTRUCTION:
-    strcpy(type, "L-instruction");
-    break;
-  default:
-    strcpy(type, "No-instruction");
-  }
   fputs(get_color_for_fd(fileno(stderr), RED), stderr);
   fprintf(stderr, "%*s^\n", position, "");
   fputs(get_color_for_fd(fileno(stderr), RESET), stderr);
@@ -97,9 +82,9 @@ void print_syntax_error(const char *line, InstructionType instruction_type, int 
   vsnprintf(new_msg_buf, sizeof new_msg_buf, format, args);
   va_end(args);
 
-  fprintf(stderr, "%s[ERROR]%s Syntax error on line %d, column %d : %s in %s \"%s\"\n",
-          get_color_for_fd(fileno(stderr), RED), get_color_for_fd(fileno(stderr), RESET), line_number, 1 + position,
-          new_msg_buf, type, line);
+  fprintf(stderr, "%s[ERROR] Syntax error on line %d, column %d : %s in %s \"%s\"%s\n",
+          get_color_for_fd(fileno(stderr), RED), line_number, position + 1, new_msg_buf, type, line,
+          get_color_for_fd(fileno(stderr), RESET));
 }
 
 bool is_constant(const char *c) {
