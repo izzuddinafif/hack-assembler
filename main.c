@@ -2,6 +2,8 @@
 #include "helper.h"
 #include "parser.h"
 #include "strlib.h"
+#include "types.h"
+#include "writer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,11 +24,20 @@ int main(int argc, char **argv) {
     printf("Usage: %s <file_name.asm>\n", argv[0]);
     return g_status;
   }
-  const char *file_name = argv[1];
+  char file_name[S128];
+  snprintf(file_name, sizeof file_name, "%s", argv[1]);
 
   Parser p;
   Parser *parser = &p;
+  TranslatedCode c;
+  TranslatedCode *code = &c;
+  Writer w;
+  Writer *writer = &w;
   parser_init(parser, file_name);
+  file_name[strlen( file_name) - 4] = '\0'; // remove .asm
+  char output_name[S128];
+  snprintf(output_name, sizeof output_name, "%s.hack", file_name);
+  writer_init(writer, output_name);
   bool has_errors = false;
   while (advance(parser)) {
     if (!has_more_lines(parser))
@@ -36,22 +47,32 @@ int main(int argc, char **argv) {
     if (parser->type == A_INSTRUCTION || parser->type == L_INSTRUCTION) {
       get_symbol(parser);
     } else {
-      parse_c_instruction(parser);
+      parse_c_instruction(parser, code);
     }
     if (parser->errorStatus) {
       has_errors = true;
-      parser_reset_fields(parser);
+      reset_fields(parser, code);
       continue;
     }
-
     print_debug(dbg, "successfully parsed %s on line %d\n", parser->currentInstruction, parser->lineNumber);
+    if (!has_errors) {
+      assemble_bits(parser, code, writer);
+      if (writer->output[0]) {
+        write_output(writer);
+        clean_output(writer);
+      }
+    }
   }
 
-  if (has_errors) {
-    g_status = EXIT_FAILURE;
-    return g_status;
-  }
   parser_destroy(parser);
-  g_status = EXIT_SUCCESS;
+  writer_destroy(writer);
+  if (has_errors) {
+    fprintf(stderr, "\nAssembly of %s.asm failed because of one or more errors\n", file_name);
+    remove(output_name);
+    g_status = EXIT_FAILURE;
+  } else {
+    fprintf(stderr, "\nAssembly of %s.asm successful! check %s\n", file_name, output_name);
+    g_status = EXIT_SUCCESS;
+  }
   return g_status;
 }

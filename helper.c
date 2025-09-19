@@ -1,6 +1,7 @@
 #include "helper.h"
 #include "parser.h"
 #include "strlib.h"
+#include "types.h"
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -75,7 +76,7 @@ void remove_comment_inplace(char *buffer) {
 void print_syntax_error(const char *line, const char *type, int line_number, int position, const char *format, ...) {
   va_list args;
   fputs(get_color_for_fd(fileno(stderr), RED), stderr);
-  fprintf(stderr, "%*s^\n", position, "");
+  fprintf(stderr, "%*s^ ", position, "");
   fputs(get_color_for_fd(fileno(stderr), RESET), stderr);
   char new_msg_buf[S128];
   va_start(args, format);
@@ -156,4 +157,40 @@ const char *is_not_valid_c_instruction(const char *instruction) {
     }
   }
   return nullptr;
+}
+
+void reset_fields(Parser *parser, TranslatedCode *code) {
+  parser->currentInstruction[0] = '\0'; // set all string buffers to empty
+  parser->symbol[0] = '\0';
+  parser->jumpMnemonic[0] = '\0';
+  parser->compMnemonic[0] = '\0';
+  parser->destMnemonic[0] = '\0';
+  parser->typeString[0] = '\0';
+  parser->type = NO_INSTRUCTION;
+  parser->errorStatus = false;
+
+  code->comp[0] = '\0';
+  code->dest[0] = '\0';
+  code->jump[0] = '\0';
+}
+
+void clean_output(Writer *writer) { writer->output[0] = '\0'; }
+
+void int_str_to_bit_str(const char *in, char *bit, size_t buf_size) {
+  if (!in) {
+    return;
+  }
+  bit[0] = '0'; // A-instruction starts with 0
+  int integer = 0;
+  str_to_int(in, &integer);
+  int remainder = 0, result = integer;
+  for (int i = (int)buf_size - 2; i > 0; i--) {
+    remainder = result % 2;
+    result /= 2;
+
+    bit[i] = (remainder ? '1' : '0');
+
+    // print_debug(dbg, "result %d remainder %d\n", result, remainder);
+  }
+  bit[buf_size - 1] = '\0';
 }

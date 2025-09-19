@@ -24,6 +24,7 @@ bool str_ends_with(const char *str, const char *suffix) {
   return (strcmp((str + start), suffix) == 0);
 }
 
+
 void str_remove_all_whitespace_inplace(char *str) {
   if (!str)
     return;

@@ -1,4 +1,5 @@
 #pragma once
+#include <stdlib.h>
 
 bool str_starts_with(const char *string, const char *prefix);
 bool str_ends_with(const char *string, const char *suffix);

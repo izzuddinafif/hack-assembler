@@ -30,20 +30,6 @@ const char *lookup_mnemonic(MnemonicMap table[], const char *mnemonic_to_find) {
   return nullptr;
 }
 
-void parser_reset_fields(Parser *parser) {
-  parser->currentInstruction[0] = '\0'; // set all string buffers to empty
-  parser->symbol[0] = '\0';
-  parser->destCode[0] = '\0';
-  parser->compCode[0] = '\0';
-  parser->jumpCode[0] = '\0';
-  parser->jumpMnemonic[0] = '\0';
-  parser->compMnemonic[0] = '\0';
-  parser->destMnemonic[0] = '\0';
-  parser->typeString[0] = '\0';
-  parser->type = NO_INSTRUCTION;
-  parser->errorStatus = false;
-}
-
 void parser_init(Parser *parser, const char *Filename) {
   FILE *file = fopen(Filename, "r");
   if (!file) {
@@ -57,9 +43,14 @@ void parser_init(Parser *parser, const char *Filename) {
   parser->hasMoreLines = true; // assume there are lines initially
   parser->lineNumber = 0;
 
-  parser_reset_fields(parser);
-
-  return;
+  parser->currentInstruction[0] = '\0'; // set all string buffers to empty
+  parser->symbol[0] = '\0';
+  parser->jumpMnemonic[0] = '\0';
+  parser->compMnemonic[0] = '\0';
+  parser->destMnemonic[0] = '\0';
+  parser->typeString[0] = '\0';
+  parser->type = NO_INSTRUCTION;
+  parser->errorStatus = false;
 }
 
 void parser_destroy(Parser *parser) {
@@ -84,8 +75,7 @@ bool advance(Parser *parser) {
     if (!*line_buf) {
       continue; // skip comment or empty line
     }
-
-    puts(line_buf);
+    printf("%s\n", line_buf);
     snprintf(parser->currentInstruction, sizeof parser->currentInstruction, "%s", line_buf);
     return true;
   }
@@ -133,7 +123,7 @@ void get_symbol(Parser *parser) {
     }
 
     // skip the @, copy the rest
-    char a_symbol[S256]; // - 1 from actual instruction
+    char a_symbol[S256];
     snprintf(a_symbol, sizeof a_symbol, "%s", instruction + 1);
     const char *invalid_symbol_ptr = is_not_valid_symbol(a_symbol, type);
     if (!invalid_symbol_ptr) {
@@ -153,7 +143,7 @@ void get_symbol(Parser *parser) {
 
     // remove parentheses
     int len = (int)strlen(instruction);
-    char l_symbol[S256]; // -2 from actual instruction
+    char l_symbol[S256];
     snprintf(l_symbol, sizeof l_symbol, "%.*s", len - 2, instruction + 1);
     const char *invalid_symbol_ptr = is_not_valid_symbol(l_symbol, type);
     if (!invalid_symbol_ptr) {
@@ -168,7 +158,7 @@ void get_symbol(Parser *parser) {
 
 void get_dest_mnemonic(Parser *parser) {
   const char *instruction = parser->currentInstruction;
-  char dest[S64] = "";
+  char dest[S64];
   snprintf(dest, sizeof dest, "%s", instruction);
   char *equal_sign = strchr(dest, '=');
   if (equal_sign) {
@@ -180,7 +170,7 @@ void get_dest_mnemonic(Parser *parser) {
 }
 
 void get_comp_mnemonic(Parser *parser) {
-  char comp[S64] = "";
+  char comp[S64];
   snprintf(comp, sizeof comp, "%s", parser->currentInstruction);
 
   char *semicolon = strchr(comp, ';');
@@ -196,7 +186,7 @@ void get_comp_mnemonic(Parser *parser) {
 }
 
 void get_jump_mnemonic(Parser *parser) {
-  char jump[S64] = "";
+  char jump[S64];
   char *semicolon = strchr(parser->currentInstruction, ';');
   if (semicolon) {
     snprintf(jump, sizeof jump, "%s", semicolon + 1);
@@ -206,15 +196,15 @@ void get_jump_mnemonic(Parser *parser) {
   snprintf(parser->jumpMnemonic, sizeof parser->jumpMnemonic, "%s", jump);
 }
 
-void parse_c_instruction(Parser *parser) {
+void parse_c_instruction(Parser *parser, TranslatedCode *code) {
   const char *invalid_instr_ptr = is_not_valid_c_instruction(parser->currentInstruction);
   if (!invalid_instr_ptr) {
     get_dest_mnemonic(parser);
     get_jump_mnemonic(parser);
     get_comp_mnemonic(parser);
-    get_dest_code(parser);
-    get_comp_code(parser);
-    get_jump_code(parser);
+    get_dest_code(parser, code);
+    get_comp_code(parser, code);
+    get_jump_code(parser, code);
     return;
   }
   // print_debug(dbg, "found error on %s\n", invalid_instr_ptr);
