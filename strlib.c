@@ -10,15 +10,24 @@
 bool str_starts_with(const char *str, const char *prefix) { return strncmp(str, prefix, strlen(prefix)) == 0; }
 
 bool str_ends_with(const char *str, const char *suffix) {
-  size_t start = strlen(str) - strlen(suffix);
+  if (!str || !suffix)
+    return false;
+  size_t len_str = strlen(str);
+  size_t len_suffix = strlen(suffix);
+
+  if (len_str < len_suffix) {
+    return false;
+  }
+
+  size_t start = len_str - len_suffix;
   // pointer arithmetic, str is char[], it decays to pointer to the first char of str
-  return strncmp((str + start), suffix, strlen(suffix)) == 0;
+  return (strcmp((str + start), suffix) == 0);
 }
 
 void str_remove_all_whitespace_inplace(char *str) {
-  if (!str) {
+  if (!str)
     return;
-  }
+
   char *write = str;
   char *read = str;
   while (*read) {
@@ -33,9 +42,9 @@ void str_remove_all_whitespace_inplace(char *str) {
 }
 
 void str_trim_leading_whitespace_inplace(char *str) {
-  if (!str) {
+  if (!str)
     return;
-  }
+
   char *start = str;
   while (*start && isspace((unsigned char)*start)) {
     start++;
@@ -45,9 +54,9 @@ void str_trim_leading_whitespace_inplace(char *str) {
 }
 
 void str_trim_trailing_whitespace_inplace(char *str) {
-  if (!str) {
+  if (!str)
     return;
-  }
+
   char *end = str + strlen(str) - 1;
   while (end >= str && isspace((unsigned char)*end)) {
     end--;
@@ -64,6 +73,8 @@ void str_trim_whitespace_inplace(char *str) {
 }
 
 int str_to_int(const char *str, int *out) {
+  if (!str || !out)
+    return 0;
   char *end_ptr;
   // errno can be set to any non-zero value by a library function call
   // regardless of whether there was an error, so it needs to be cleared
@@ -72,20 +83,17 @@ int str_to_int(const char *str, int *out) {
 
   // base 10
   long value = strtol(str, &end_ptr, 10);
-  if (str == end_ptr) {
+  if (str == end_ptr)
     return 0; // no digits found, end_ptr stil points to str (first char)
-  }
 
-  if (errno == ERANGE) {
+  if (errno == ERANGE)
     return 0; // out of range error / overflow
-  }
 
-  if (*end_ptr != '\0') {
+  if (*end_ptr != '\0')
     return 0; // non-number after number e.g. 123abc (optional tho)
-  }
 
   *out = (int)value;
-  return 1;  // success
+  return 1; // success
 }
 
 // char s[12] = "  hey yo  ";
