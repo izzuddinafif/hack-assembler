@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 
-const char *lookup_mnemonic(MnemonicMap table[], const char *mnemonic_to_find);
+const char *lookup_mnemonic(MnemonicMap *table, const char *mnemonic_to_find);
 
-void parser_init(Parser *parser, const char *filename);
+bool parser_init(Parser *parser, const char *filename);
 void parser_destroy(Parser *parser);
 
 bool has_more_lines(Parser *parser);

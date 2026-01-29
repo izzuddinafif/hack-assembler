@@ -18,7 +18,6 @@ void writer_init(Writer *writer, const char *output_filename) {
   writer->outputFile = file;
 }
 
-
 void assemble_bits(Parser *parser, TranslatedCode *code, Writer *writer) {
   InstructionType type = parser->type;
   switch (type) {
@@ -51,6 +50,6 @@ void writer_destroy(Writer *writer) {
   }
   if (writer->outputFile) {
     fclose(writer->outputFile);
+    writer->outputFile = nullptr;
   }
-  writer = nullptr;
 }

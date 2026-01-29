@@ -10,6 +10,13 @@ typedef struct {
   bool enabled;
 } Debugger;
 
+// !WARNING!
+// Use it only like this:
+// int *ptr = malloc(100);
+// FREE(ptr); // OK
+//
+// NOT like this:
+// FREE(array[i++]); // !DON'T DO THIS!
 #define FREE(p)                                                                                                        \
   do {                                                                                                                 \
     free(p);                                                                                                           \
@@ -44,7 +51,7 @@ static inline void print_debug(Debugger *dbg, const char *format, ...) {
     printf("[DEBUG - %s] ", time_str);
     va_list args;
     va_start(args, format);
-    vprintf_s(format, args);
+    vprintf(format, args);
     va_end(args);
   }
 }

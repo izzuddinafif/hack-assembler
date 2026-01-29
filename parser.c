@@ -21,7 +21,7 @@ MnemonicMap dest_table[] = {{"null", "000"}, {"M", "001"},  {"D", "010"},   {"DM
 MnemonicMap jump_table[] = {{"null", "000"}, {"JGT", "001"}, {"JEQ", "010"}, {"JGE", "011"},    {"JLT", "100"},
                             {"JNE", "101"},  {"JLE", "110"}, {"JMP", "111"}, {nullptr, nullptr}};
 
-const char *lookup_mnemonic(MnemonicMap table[], const char *mnemonic_to_find) {
+const char *lookup_mnemonic(MnemonicMap *table, const char *mnemonic_to_find) {
   for (int i = 0; table[i].mnemonic; i++) {
     if (strcmp(table[i].mnemonic, mnemonic_to_find) == 0) {
       return table[i].binary;
@@ -30,12 +30,12 @@ const char *lookup_mnemonic(MnemonicMap table[], const char *mnemonic_to_find) {
   return nullptr;
 }
 
-void parser_init(Parser *parser, const char *Filename) {
+bool parser_init(Parser *parser, const char *Filename) {
   FILE *file = fopen(Filename, "r");
   if (!file) {
     fprintf(stderr, "Error opening file '%s': ", Filename);
     perror("");
-    return;
+    return false;
   }
 
   parser->errorStatus = false;
@@ -51,6 +51,7 @@ void parser_init(Parser *parser, const char *Filename) {
   parser->typeString[0] = '\0';
   parser->type = NO_INSTRUCTION;
   parser->errorStatus = false;
+  return true;
 }
 
 void parser_destroy(Parser *parser) {
@@ -58,8 +59,8 @@ void parser_destroy(Parser *parser) {
     return;
   if (parser->inputFile) {
     fclose(parser->inputFile);
+    parser->inputFile = nullptr;
   }
-  parser = nullptr;
 }
 
 bool has_more_lines(Parser *parser) { return parser->hasMoreLines; }

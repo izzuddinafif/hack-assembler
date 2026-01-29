@@ -33,12 +33,14 @@ int main(int argc, char **argv) {
   TranslatedCode *code = &c;
   Writer w;
   Writer *writer = &w;
-  parser_init(parser, file_name);
-  file_name[strlen( file_name) - 4] = '\0'; // remove .asm
+  if (!parser_init(parser, file_name)) {
+    return g_status;
+  }
+  file_name[strlen(file_name) - 4] = '\0'; // remove .asm
   char output_name[S128];
   snprintf(output_name, sizeof output_name, "%s.hack", file_name);
   writer_init(writer, output_name);
-  bool has_errors = false;
+  int error_count = 0;
   while (advance(parser)) {
     if (!has_more_lines(parser))
       break;
@@ -50,12 +52,12 @@ int main(int argc, char **argv) {
       parse_c_instruction(parser, code);
     }
     if (parser->errorStatus) {
-      has_errors = true;
+      error_count++;
       reset_fields(parser, code);
       continue;
     }
     print_debug(dbg, "successfully parsed %s on line %d\n", parser->currentInstruction, parser->lineNumber);
-    if (!has_errors) {
+    if (error_count == 0) {
       assemble_bits(parser, code, writer);
       if (writer->output[0]) {
         write_output(writer);
@@ -66,12 +68,13 @@ int main(int argc, char **argv) {
 
   parser_destroy(parser);
   writer_destroy(writer);
-  if (has_errors) {
-    fprintf(stderr, "\nAssembly of %s.asm failed because of one or more errors\n", file_name);
+  if (error_count > 0) {
+    fprintf(stderr, "\nAssembly of %s.asm failed with %d error%s\n", file_name, error_count,
+            error_count == 1 ? "" : "s");
     remove(output_name);
     g_status = EXIT_FAILURE;
   } else {
-    fprintf(stderr, "\nAssembly of %s.asm successful! check %s\n", file_name, output_name);
+    fprintf(stderr, "\nAssembly of %s.asm successful! check out %s\n", file_name, output_name);
     g_status = EXIT_SUCCESS;
   }
   return g_status;

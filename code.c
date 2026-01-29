@@ -13,7 +13,7 @@ void get_dest_code(Parser *parser, TranslatedCode *code) {
     parser->errorStatus = true;
   } else {
     print_debug(dbg, "found dest mnemonic \"%s\" in lookup table as \"%s\"\n", dest, binary);
-    snprintf(code->dest, sizeof code->comp, "%s", binary);
+    snprintf(code->dest, sizeof code->dest, "%s", binary);
   }
 }
 
@@ -49,6 +49,6 @@ void get_jump_code(Parser *parser, TranslatedCode *code) {
     parser->errorStatus = true;
   } else {
     print_debug(dbg, "found jump mnemonic \"%s\" in lookup table as \"%s\"\n", jump, binary);
-    snprintf(code->jump, sizeof code->comp, "%s", binary);
+    snprintf(code->jump, sizeof code->jump, "%s", binary);
   }
 }

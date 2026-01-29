@@ -105,7 +105,7 @@ const char *is_not_valid_symbol(char *symbol, InstructionType type) {
   if (is_constant_var && (type == L_INSTRUCTION || !is_valid_const_size(symbol))) {
     return symbol;
   }
-  // print_debug(dbg, "checking string \'%s\'.. \n", symbol);
+  print_debug(dbg, "checking string \'%s\'.. \n", symbol);
   while (*symbol) {
     int sym = (unsigned char)*symbol;
     // print_debug(dbg, "checking char \'%c\'.. \n", *symbol);
@@ -177,7 +177,10 @@ void reset_fields(Parser *parser, TranslatedCode *code) {
 void clean_output(Writer *writer) { writer->output[0] = '\0'; }
 
 void int_str_to_bit_str(const char *in, char *bit, size_t buf_size) {
-  if (!in) {
+  if (!in || buf_size < 2) {
+    if (bit && buf_size > 0) {
+      bit[0] = '\0';
+    }
     return;
   }
   bit[0] = '0'; // A-instruction starts with 0

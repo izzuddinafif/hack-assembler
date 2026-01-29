@@ -36,6 +36,13 @@ typedef struct {
   char jump[S4];
 } TranslatedCode;
 
-// typedef struct {
+typedef struct {
+  char *name;
+  int address;
+} Symbol;
 
-// }
+typedef struct {
+  Symbol *entries;
+  int size; // currently stored
+  int capacity; // max can be stored
+}SymbolTable;

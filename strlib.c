@@ -24,7 +24,6 @@ bool str_ends_with(const char *str, const char *suffix) {
   return (strcmp((str + start), suffix) == 0);
 }
 
-
 void str_remove_all_whitespace_inplace(char *str) {
   if (!str)
     return;
@@ -84,6 +83,12 @@ int str_to_int(const char *str, int *out) {
 
   // base 10
   long value = strtol(str, &end_ptr, 10);
+
+  // On systems where long is larger than int (which is common on 64-bit
+  // systems), a number might fit in a long but not in an int
+  if (value < INT_MIN || value > INT_MAX)
+    return 0; // Value doesn't fit in an int
+
   if (str == end_ptr)
     return 0; // no digits found, end_ptr stil points to str (first char)
 
@@ -100,8 +105,9 @@ int str_to_int(const char *str, int *out) {
 // char s[12] = "  hey yo  ";
 
 // int main() {
-//   void (*f[])(char *) = {str_trim_leading_whitespace_inplace, str_trim_trailing_whitespace_inplace,
-//                          str_remove_all_whitespace_inplace};
+// void (*f[])(char *) = {str_trim_leading_whitespace_inplace,
+//                       str_trim_trailing_whitespace_inplace,
+//                       str_remove_all_whitespace_inplace};
 
 //   printf("'%s' with len of %llu\n", s, strlen(s));
 
