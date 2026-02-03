@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
   if (env && strcmp(env, "y") == 0)
     en = true;
   init_debugger(dbg, en);
-  print_debug(dbg, "Heya, debug mode is on!\n");
+  DEBUG_LOG(dbg, "Heya, debug mode is on!\n");
 
   printf("Welcome to Afif's Hack Assembler!\n\n");
   if (argc < 2 || !str_ends_with(argv[1], ".asm")) {
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
       reset_fields(parser, code);
       continue;
     }
-    print_debug(dbg, "successfully parsed %s on line %d\n", parser->currentInstruction, parser->lineNumber);
+    DEBUG_LOG(dbg, "successfully parsed %s on line %d\n", parser->currentInstruction, parser->lineNumber);
     if (error_count == 0) {
       assemble_bits(parser, code, writer);
       if (writer->output[0]) {

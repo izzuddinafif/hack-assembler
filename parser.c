@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-MnemonicMap comp_table[] = {
+const MnemonicMap comp_table[] = {
     {"0", "0101010"},   {"1", "0111111"},   {"-1", "0111010"},  {"D", "0001100"},   {"A", "0110000"},
     {"M", "1110000"},   {"!D", "0001101"},  {"!A", "0110001"},  {"!M", "1110001"},  {"-D", "0001111"},
     {"-A", "0110011"},  {"-M", "1110011"},  {"D+1", "0011111"}, {"A+1", "0110111"}, {"M+1", "1110111"},
@@ -15,13 +15,13 @@ MnemonicMap comp_table[] = {
     {"D-A", "0010011"}, {"D-M", "1010011"}, {"A-D", "0000111"}, {"M-D", "1000111"}, {"D&A", "0000000"},
     {"D&M", "1000000"}, {"D|A", "0010101"}, {"D|M", "1010101"}, {nullptr, nullptr}};
 
-MnemonicMap dest_table[] = {{"null", "000"}, {"M", "001"},  {"D", "010"},   {"DM", "011"},     {"A", "100"},
-                            {"AM", "101"},   {"AD", "110"}, {"ADM", "111"}, {nullptr, nullptr}};
+const MnemonicMap dest_table[] = {{"null", "000"}, {"M", "001"},  {"D", "010"},   {"DM", "011"},     {"A", "100"},
+                                  {"AM", "101"},   {"AD", "110"}, {"ADM", "111"}, {nullptr, nullptr}};
 
-MnemonicMap jump_table[] = {{"null", "000"}, {"JGT", "001"}, {"JEQ", "010"}, {"JGE", "011"},    {"JLT", "100"},
-                            {"JNE", "101"},  {"JLE", "110"}, {"JMP", "111"}, {nullptr, nullptr}};
+const MnemonicMap jump_table[] = {{"null", "000"}, {"JGT", "001"}, {"JEQ", "010"}, {"JGE", "011"},    {"JLT", "100"},
+                                  {"JNE", "101"},  {"JLE", "110"}, {"JMP", "111"}, {nullptr, nullptr}};
 
-const char *lookup_mnemonic(MnemonicMap *table, const char *mnemonic_to_find) {
+const char *lookup_mnemonic(const MnemonicMap *table, const char *mnemonic_to_find) {
   for (int i = 0; table[i].mnemonic; i++) {
     if (strcmp(table[i].mnemonic, mnemonic_to_find) == 0) {
       return table[i].binary;
@@ -129,7 +129,7 @@ void get_symbol(Parser *parser) {
     const char *invalid_symbol_ptr = is_not_valid_symbol(a_symbol, type);
     if (!invalid_symbol_ptr) {
       snprintf(parser->symbol, sizeof parser->symbol, "%s", a_symbol);
-      print_debug(dbg, "found variable symbol/decimal constant \"%s\" from the A-instruction\n", a_symbol);
+      DEBUG_LOG(dbg, "found variable symbol/decimal constant \"%s\" from the A-instruction\n", a_symbol);
       return;
     }
     _parser_symbol_print_error(ln, invalid_symbol_ptr, parser->typeString, instruction, a_symbol, 1);
@@ -149,7 +149,7 @@ void get_symbol(Parser *parser) {
     const char *invalid_symbol_ptr = is_not_valid_symbol(l_symbol, type);
     if (!invalid_symbol_ptr) {
       snprintf(parser->symbol, sizeof parser->symbol, "%s", l_symbol);
-      print_debug(dbg, "found label symbol \"%s\" from the L-instruction\n", l_symbol);
+      DEBUG_LOG(dbg, "found label symbol \"%s\" from the L-instruction\n", l_symbol);
       return;
     }
     _parser_symbol_print_error(ln, invalid_symbol_ptr, parser->typeString, instruction, l_symbol, 1);
@@ -208,7 +208,7 @@ void parse_c_instruction(Parser *parser, TranslatedCode *code) {
     get_jump_code(parser, code);
     return;
   }
-  // print_debug(dbg, "found error on %s\n", invalid_instr_ptr);
+  // DEBUG_LOG(dbg, "found error on %s\n", invalid_instr_ptr);
   int invalid_instr_pos =
       0 + (int)(strchr(parser->currentInstruction, *invalid_instr_ptr) - parser->currentInstruction);
   if (isspace((unsigned char)*invalid_instr_ptr)) {

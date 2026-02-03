@@ -105,12 +105,12 @@ const char *is_not_valid_symbol(char *symbol, InstructionType type) {
   if (is_constant_var && (type == L_INSTRUCTION || !is_valid_const_size(symbol))) {
     return symbol;
   }
-  print_debug(dbg, "checking string \'%s\'.. \n", symbol);
+  DEBUG_LOG(dbg, "checking string \'%s\'.. \n", symbol);
   while (*symbol) {
     int sym = (unsigned char)*symbol;
-    // print_debug(dbg, "checking char \'%c\'.. \n", *symbol);
+    // DEBUG_LOG(dbg, "checking char \'%c\'.. \n", *symbol);
     if (!(isalnum(sym) || sym == '_' || sym == '.' || sym == '$' || sym == ':')) {
-      // print_debug(dbg, "%c is NOT a valid symbol\n", sym);
+      // DEBUG_LOG(dbg, "%c is NOT a valid symbol\n", sym);
       return symbol;
     }
     symbol++;
@@ -121,7 +121,7 @@ const char *is_not_valid_symbol(char *symbol, InstructionType type) {
 bool is_valid_const_size(const char *string) {
   int result = 0;
   if (str_to_int(string, &result)) {
-    // print_debug(dbg, "converted %d\n", result);
+    // DEBUG_LOG(dbg, "converted %d\n", result);
     if (result > MAX_CONSTANT_SIZE) {
       return false;
     }
@@ -136,9 +136,9 @@ const char *is_not_valid_c_instruction(const char *instruction) {
   const char *equal_sign = strchr(instruction, '=');
   const char *semicolon = strchr(instruction, ';');
   const char *start = instruction;
-  // print_debug(dbg, "checking C instruction \"%s\"\n", instruction);
+  // DEBUG_LOG(dbg, "checking C instruction \"%s\"\n", instruction);
   while (*instruction) {
-    // print_debug(dbg, "checking char \'%c\'\n", *instruction);
+    // DEBUG_LOG(dbg, "checking char \'%c\'\n", *instruction);
     if (!(isalpha((unsigned char)(*instruction)) || *instruction == '1' || *instruction == '0' || *instruction == ';' ||
           *instruction == '=' || *instruction == '-' || *instruction == '+' || *instruction == '!' ||
           *instruction == '&' || *instruction == '|')) {
@@ -193,7 +193,7 @@ void int_str_to_bit_str(const char *in, char *bit, size_t buf_size) {
 
     bit[i] = (remainder ? '1' : '0');
 
-    // print_debug(dbg, "result %d remainder %d\n", result, remainder);
+    // DEBUG_LOG(dbg, "result %d remainder %d\n", result, remainder);
   }
   bit[buf_size - 1] = '\0';
 }

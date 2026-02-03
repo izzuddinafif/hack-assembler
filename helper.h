@@ -4,11 +4,74 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <time.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/time.h>
+#endif
 
 typedef struct {
   bool enabled;
 } Debugger;
+
+#if defined(__GNUC__) || defined(__clang__)
+#define PRINTF_LIKE(fmt_idx, first_arg) __attribute__((format(printf, fmt_idx, first_arg)))
+#else
+#define PRINTF_LIKE(fmt_idx, first_arg)
+#endif
+
+static inline void debug_get_time(char *buf, size_t size) {
+#ifdef _WIN32
+  SYSTEMTIME st;
+  GetLocalTime(&st);
+
+  snprintf(buf, size, "%04d-%02d-%02d %02d:%02d:%02d.%03d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute,
+           st.wSecond, st.wMilliseconds);
+#else
+  struct timespec ts;
+  struct tm tm;
+
+  clock_gettime(CLOCK_REALTIME, &ts);
+  localtime_r(&ts.tv_sec, &tm);
+
+  strftime(buf, size, "%Y-%m-%d %H:%M:%S", &tm);
+  snprintf(buf + strlen(buf), size - strlen(buf), ".%03ld", ts.tv_nsec / 1000000);
+#endif
+}
+
+#ifdef DEBUG
+
+static void debug_vprint(const char *file, int line, const char *func, const char *fmt, va_list args) PRINTF_LIKE(4, 0);
+
+static void debug_print(const char *file, int line, const char *func, const char *fmt, ...) PRINTF_LIKE(4, 5);
+
+static void debug_vprint(const char *file, int line, const char *func, const char *fmt, va_list args) {
+  char timebuf[64];
+  debug_get_time(timebuf, sizeof(timebuf));
+
+  fprintf(stderr, "[DEBUG] %s | %s:%d (%s): ", timebuf, file, line, func);
+
+  vfprintf(stderr, fmt, args);
+  fputc('\n', stderr);
+}
+
+static void debug_print(const char *file, int line, const char *func, const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  debug_vprint(file, line, func, fmt, args);
+  va_end(args);
+}
+
+#define DEBUG_LOG(dbg, fmt, ...)                                                                                       \
+  do {                                                                                                                 \
+    if ((dbg) && (dbg)->enabled)                                                                                       \
+      debug_print(__FILE__, __LINE__, __func__, fmt __VA_OPT__(, ) __VA_ARGS__);                                       \
+  } while (0)
+
+#else
+#define DEBUG_LOG(...) ((void)0)
+#endif
 
 // !WARNING!
 // Use it only like this:
@@ -22,40 +85,6 @@ typedef struct {
     free(p);                                                                                                           \
     (p) = nullptr;                                                                                                     \
   } while (0)
-
-#ifdef _WIN32
-// Windows: Use ctime_s
-static inline void print_debug(Debugger *dbg, const char *format, ...) {
-  if (dbg->enabled) {
-    time_t now = time(nullptr);
-    char time_str[26];
-    ctime_s(time_str, sizeof(time_str), &now);
-    time_str[24] = '\0'; // remove newline
-    printf("[DEBUG] - %s - ", time_str);
-    va_list args;
-    va_start(args, format);
-    vprintf_s(format, args);
-    va_end(args);
-  }
-}
-#else
-// POSIX: Use ctime_r (or ctime as fallback)
-static inline void print_debug(Debugger *dbg, const char *format, ...) {
-  if (dbg->enabled) {
-    time_t now = time(nullptr);
-    char time_str[26];
-    char *result = sizeof(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L ? ctime_r(&now, time_str) : ctime(&now);
-    if (result == nullptr)
-      result = "unknown time";
-    result[24] = '\0';
-    printf("[DEBUG - %s] ", time_str);
-    va_list args;
-    va_start(args, format);
-    vprintf(format, args);
-    va_end(args);
-  }
-}
-#endif
 
 bool is_constant(const char *c);
 const char *is_not_valid_symbol(char *symbol, InstructionType type);

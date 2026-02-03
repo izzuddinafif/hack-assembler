@@ -34,7 +34,7 @@ void assemble_bits(Parser *parser, TranslatedCode *code, Writer *writer) {
     break;
   default:
   }
-  print_debug(dbg, "bits assembled: \"%s\"\n", writer->output);
+  DEBUG_LOG(dbg, "bits assembled: \"%s\"\n", writer->output);
 }
 
 void write_output(Writer *writer) {
