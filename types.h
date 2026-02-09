@@ -3,13 +3,19 @@
 #include <stdio.h>
 
 enum { S4 = 4, S8 = 8, S32 = 32, S64 = 64, S128 = 128, S256 = 256, S512 = 512 };
-typedef enum { NO_INSTRUCTION, A_INSTRUCTION, C_INTRUCTION, L_INSTRUCTION } InstructionType;
+typedef enum {
+  NO_INSTRUCTION,
+  A_INSTRUCTION,
+  C_INTRUCTION,
+  L_INSTRUCTION
+} InstructionType;
 typedef struct {
   FILE *inputFile;
-  char currentInstruction[S256];
+  char currentInstruction[S512];
   bool hasMoreLines;
   int lineNumber;
   bool errorStatus;
+  int instructionAddress;
 
   // to be filled
   InstructionType type;
@@ -43,6 +49,17 @@ typedef struct {
 
 typedef struct {
   Symbol *entries;
-  int size; // currently stored
-  int capacity; // max can be stored
-}SymbolTable;
+  int size;             // currently stored index (starts from 0)
+  int capacity;         // max can be stored
+  int next_var_address; // next var addr in memory (starts with 16)
+} SymbolTable;
+
+typedef enum { SUCCESS, DUPLICATE_SYMBOL, MEMORY_ERROR } ErrorCode;
+
+// TODO: in the future, refactor error handling with this struct maybe?
+typedef struct {
+  ErrorCode error_code;
+  char string[S128];
+  int lineNumber;
+  int position;
+} Error;
