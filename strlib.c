@@ -7,7 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool str_starts_with(const char *str, const char *prefix) { return strncmp(str, prefix, strlen(prefix)) == 0; }
+bool str_starts_with(const char *str, const char *prefix) {
+  return strncmp(str, prefix, strlen(prefix)) == 0;
+}
 
 bool str_ends_with(const char *str, const char *suffix) {
   if (!str || !suffix)
@@ -20,7 +22,8 @@ bool str_ends_with(const char *str, const char *suffix) {
   }
 
   size_t start = len_str - len_suffix;
-  // pointer arithmetic, str is char[], it decays to pointer to the first char of str
+  // pointer arithmetic, str is char[], it decays to pointer to the first char
+  // of str
   return (strcmp((str + start), suffix) == 0);
 }
 
