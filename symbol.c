@@ -119,3 +119,15 @@ void symbol_table_dump(SymbolTable *table) {
   }
   DEBUG_LOG(dbg, "Next var address: %d", table->next_var_address);
 }
+
+void symbol_destroy(SymbolTable *symbol_table) {
+  for (int i = 0; i < symbol_table->size; i++) {
+    FREE(symbol_table->entries[i].name);
+  }
+  FREE(symbol_table->entries);
+
+  symbol_table->entries = nullptr;
+  symbol_table->size = 0;
+  symbol_table->capacity = 2;
+  symbol_table->next_var_address = 16;
+}

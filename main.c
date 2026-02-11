@@ -93,6 +93,7 @@ int main(int argc, char **argv) {
   }
   parser_destroy(parser);
   writer_destroy(writer);
+  symbol_destroy(symbol_table);
   return g_status;
 }
 

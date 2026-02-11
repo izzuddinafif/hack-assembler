@@ -8,3 +8,4 @@ bool add_entry(SymbolTable *symbol_table, const char *name, int address,
 bool contains(SymbolTable *symbol_table, const char *symbol);
 int get_address(SymbolTable *symbol_table, const char *symbol_name);
 void symbol_table_dump(SymbolTable *table);
+void symbol_destroy(SymbolTable *symbol_table);
