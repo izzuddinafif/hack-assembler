@@ -1,5 +1,6 @@
 #include "code.h"
 #include "helper.h"
+#include "logisim.h"
 #include "parser.h"
 #include "strlib.h"
 #include "symbol.h"
@@ -15,11 +16,13 @@ int g_status = EXIT_FAILURE;
 int first_pass(Parser *parser, SymbolTable *symbol_table, Error *err);
 // Second pass scans for A-instructions and C-instructions and writes the output
 int second_pass(Parser *parser, TranslatedCode *code, Writer *writer,
-                SymbolTable *symbol_table, Error *err);
+                SymbolTable *symbol_table, Error *err,
+                LogisimWriter *logisim_writer);
 
 int main(int argc, char **argv) {
   // initialize debugger
   bool en = false;
+  bool is_logisim_raw = false;
   char *env = getenv("DBG");
   if (env && strcmp(env, "y") == 0)
     en = true;
@@ -28,8 +31,15 @@ int main(int argc, char **argv) {
 
   printf("Welcome to Afif's Hack Assembler!\n\n");
   if (argc < 2 || !str_ends_with(argv[1], ".asm")) {
-    printf("Usage: %s <file_name.asm>\n", argv[0]);
+    printf("Usage: %s [file.asm] [option]\n\tOptions: -l (logisim raw "
+           "format)\n",
+           argv[0]);
     return g_status;
+  }
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-l") == 0) {
+      is_logisim_raw = true;
+    }
   }
   char file_name[S128];
   snprintf(file_name, sizeof file_name, "%s", argv[1]);
@@ -44,6 +54,8 @@ int main(int argc, char **argv) {
   SymbolTable *symbol_table = &st;
   Error e;
   Error *err = &e;
+  LogisimWriter lw;
+  LogisimWriter *logisim_writer = &lw;
 
   if (!parser_init(parser, file_name)) {
     fprintf(stderr, "Error opening file '%s': ", file_name);
@@ -51,9 +63,18 @@ int main(int argc, char **argv) {
     return g_status;
   }
   file_name[strlen(file_name) - 4] = '\0'; // remove .asm
-  char output_name[S128];
-  snprintf(output_name, sizeof output_name, "%s.hack", file_name);
-  writer_init(writer, output_name);
+  char output_filename[S128];
+  snprintf(output_filename, sizeof output_filename, "%s.hack", file_name);
+  FILE *output_file = fopen(output_filename, "w");
+  if (!output_file) {
+    fprintf(stderr, "Error opening file '%s': ", output_filename);
+    perror("");
+    return g_status;
+  }
+  if (is_logisim_raw) {
+    logisim_init(logisim_writer);
+  }
+  writer_init(writer, output_file, is_logisim_raw);
 
   if (symbol_init(symbol_table, &err->error_code)) {
     switch (err->error_code) {
@@ -73,22 +94,23 @@ int main(int argc, char **argv) {
 
   int error_count = first_pass(parser, symbol_table, err);
   reset_fields(parser, nullptr);
-  error_count += second_pass(parser, code, writer, symbol_table, err);
+  error_count +=
+      second_pass(parser, code, writer, symbol_table, err, logisim_writer);
 
   if (error_count > 0) {
     fprintf(stderr, "\n%sAssembly of %s.asm failed with %d error%s%s\n",
             get_color_for_fd(fileno(stderr), MAGENTA), file_name, error_count,
             error_count == 1 ? "" : "s",
             get_color_for_fd(fileno(stderr), RESET));
-    remove(output_name);
+    remove(output_filename);
     g_status = EXIT_FAILURE;
   } else {
-    fprintf(
-        stderr,
-        "\n%sAssembly of %d line%s of %s.asm was successful! check out %s%s\n",
-        get_color_for_fd(fileno(stderr), GREEN), parser->lineNumber,
-        parser->lineNumber > 1 ? "s" : "", file_name, output_name,
-        get_color_for_fd(fileno(stderr), RESET));
+    fprintf(stderr,
+            "\n%sAssembly of %d line%s of %s.asm was successful! check out "
+            "%s%s\n",
+            get_color_for_fd(fileno(stderr), GREEN), parser->lineNumber,
+            parser->lineNumber > 1 ? "s" : "", file_name, output_filename,
+            get_color_for_fd(fileno(stderr), RESET));
     g_status = EXIT_SUCCESS;
   }
   parser_destroy(parser);
@@ -151,7 +173,8 @@ int first_pass(Parser *parser, SymbolTable *symbol_table, Error *err) {
 }
 
 int second_pass(Parser *parser, TranslatedCode *code, Writer *writer,
-                SymbolTable *symbol_table, Error *err) {
+                SymbolTable *symbol_table, Error *err,
+                LogisimWriter *logisim_writer) {
   int error_count = 0;
   while (advance(parser)) {
     if (!has_more_lines(parser))
@@ -176,8 +199,13 @@ int second_pass(Parser *parser, TranslatedCode *code, Writer *writer,
               parser->currentInstruction, parser->lineNumber);
     if (error_count == 0) {
       assemble_bits(parser, code, writer, symbol_table);
+      if (writer->is_logisim_raw) {
+        char hex4[5];
+        binary_to_hex(writer->output, hex4);
+        strcpy(writer->output, hex4);
+      }
       if (writer->output[0]) {
-        write_output(writer);
+        write_output(writer, logisim_writer);
         clean_output(writer);
       }
     }

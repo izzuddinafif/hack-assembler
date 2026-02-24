@@ -8,15 +8,14 @@
 #include <stdio.h>
 #include <string.h>
 
-void writer_init(Writer *writer, const char *output_filename) {
-  FILE *file = fopen(output_filename, "w");
-  if (!file) {
-    fprintf(stderr, "Error opening file '%s': ", output_filename);
-    perror("");
-    return;
-  }
+void writer_init(Writer *writer, FILE *output_file, bool is_logisim_raw) {
+  writer->outputFile = output_file;
+  writer->output[0] = '\0';
+  writer->is_logisim_raw = is_logisim_raw;
 
-  writer->outputFile = file;
+  if (is_logisim_raw) {
+    fprintf(output_file, "%s\n", "v2.0 raw");
+  }
 }
 
 void assemble_bits(Parser *parser, TranslatedCode *code, Writer *writer,
@@ -51,10 +50,30 @@ void assemble_bits(Parser *parser, TranslatedCode *code, Writer *writer,
   DEBUG_LOG(dbg, "bits assembled: \"%s\"", writer->output);
 }
 
-void write_output(Writer *writer) {
-  if (fprintf(writer->outputFile, "%s\n", writer->output) == EOF) {
-    perror("fputs failed");
-    return;
+void write_output(Writer *writer, LogisimWriter *logisim_writer) {
+  if (writer->is_logisim_raw) {
+    if (fprintf(writer->outputFile, "%s", writer->output) == EOF) {
+      perror("fprintf failed");
+      return;
+    }
+    logisim_writer->current_word_count++;
+    if (logisim_writer->current_word_count == logisim_writer->words_per_line) {
+      if (fprintf(writer->outputFile, "%s", "\n") == EOF) {
+        perror("fprintf failed");
+        return;
+      }
+      logisim_writer->current_word_count = 0;
+    } else {
+      if (fprintf(writer->outputFile, "%s", " ") == EOF) {
+        perror("fprintf failed");
+        return;
+      }
+    }
+  } else {
+    if (fprintf(writer->outputFile, "%s\n", writer->output) == EOF) {
+      perror("fprintf failed");
+      return;
+    }
   }
 }
 

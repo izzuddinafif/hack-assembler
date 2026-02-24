@@ -29,6 +29,7 @@ typedef struct {
 typedef struct {
   FILE *outputFile;
   char output[17]; // 16 bit output string
+  bool is_logisim_raw;
 } Writer;
 
 typedef struct {
@@ -60,6 +61,11 @@ typedef enum { SUCCESS, DUPLICATE_SYMBOL, MEMORY_ERROR } ErrorCode;
 typedef struct {
   ErrorCode error_code;
   char string[S128];
-  int lineNumber;
+  int line_number;
   int position;
 } Error;
+
+typedef struct {
+  int words_per_line;
+  int current_word_count;
+} LogisimWriter;
