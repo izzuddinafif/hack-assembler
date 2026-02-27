@@ -94,8 +94,10 @@ int main(int argc, char **argv) {
 
   int error_count = first_pass(parser, symbol_table, err);
   reset_fields(parser, nullptr);
-  error_count +=
-      second_pass(parser, code, writer, symbol_table, err, logisim_writer);
+  if (error_count == 0) {
+    error_count +=
+        second_pass(parser, code, writer, symbol_table, err, logisim_writer);
+  }
 
   if (error_count > 0) {
     fprintf(stderr, "\n%sAssembly of %s.asm failed with %d error%s%s\n",
@@ -134,10 +136,9 @@ int first_pass(Parser *parser, SymbolTable *symbol_table, Error *err) {
           // sprintf(err->string, "%s[ERROR] Insufficent memory%s\n",
           //         get_color_for_fd(fileno(stderr), RED),
           //         get_color_for_fd(fileno(stderr), RESET));
-          printf("%s[ERROR] Duplicate label symbol \'%s\' "
-                 "on line %d%s\n",
-                 get_color_for_fd(fileno(stderr), RED), parser->symbol,
-                 parser->lineNumber, get_color_for_fd(fileno(stderr), RESET));
+          printf("%s[ERROR] Insufficient memory%s\n",
+                 get_color_for_fd(fileno(stderr), RED),
+                 get_color_for_fd(fileno(stderr), RESET));
           break;
         case DUPLICATE_SYMBOL:
           // sprintf(err->string,
